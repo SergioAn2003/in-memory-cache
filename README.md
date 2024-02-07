@@ -1,5 +1,5 @@
 # in-memory-cache
 
-#Installation
+Installation
 
-go get github.com/SergioAn/in-memory-cache
+```go get github.com/SergioAn2003/in-memory-cache```
