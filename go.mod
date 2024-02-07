@@ -1,3 +1,3 @@
 module github.com/SergioAn/in-memory-cache
 
-go 1.21.6
+go 1.21
