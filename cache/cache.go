@@ -23,7 +23,7 @@ func New[K comparable, T any]() *Cache[K, T] {
 
 	go func() {
 		for {
-			cache.Clear()
+			cache.сlear()
 			time.Sleep(time.Minute)
 		}
 	}()
@@ -54,7 +54,7 @@ func (c *Cache[K, T]) Delete(key K) {
 	c.mu.Unlock()
 }
 
-func (c *Cache[K, T]) Clear() {
+func (c *Cache[K, T]) сlear() {
 	for key, value := range c.cache {
 		if time.Now().After(value.lifeTime) {
 			delete(c.cache, key)
