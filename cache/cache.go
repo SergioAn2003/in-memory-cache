@@ -16,10 +16,19 @@ type CacheItem[T any] struct {
 }
 
 func New[K comparable, T any]() *Cache[K, T] {
-	return &Cache[K, T]{
+	cache := &Cache[K, T]{
 		cache: make(map[K]CacheItem[T]),
 		mu:    sync.RWMutex{},
 	}
+
+	go func() {
+		for {
+			cache.Clear()
+			time.Sleep(time.Minute)
+		}
+	}()
+
+	return cache
 }
 
 func (c *Cache[K, T]) Set(key K, value T, ttl time.Duration) error {
@@ -32,15 +41,11 @@ func (c *Cache[K, T]) Set(key K, value T, ttl time.Duration) error {
 	return nil
 }
 
-func (c *Cache[K, T]) Get(key K) (t T, exists bool) {
+func (c *Cache[K, T]) Get(key K) (T, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	cache, exist := c.cache[key]
-	if !exist || time.Now().After(cache.lifeTime) {
-		c.Delete(key)
-		return t, false
-	}
-	return cache.value, true
+	return cache.value, exist
 }
 
 func (c *Cache[K, T]) Delete(key K) {
@@ -49,14 +54,9 @@ func (c *Cache[K, T]) Delete(key K) {
 	c.mu.Unlock()
 }
 
-func (c *Cache[K, T]) CleanUpExpired() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	now := time.Now()
-
+func (c *Cache[K, T]) Clear() {
 	for key, value := range c.cache {
-		if now.After(value.lifeTime) {
+		if time.Now().After(value.lifeTime) {
 			delete(c.cache, key)
 		}
 	}
