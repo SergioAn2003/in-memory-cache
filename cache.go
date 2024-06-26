@@ -5,7 +5,13 @@ import (
 	"time"
 )
 
-type Cache[K comparable, T any] struct {
+type Cache[K comparable, T any] interface {
+	Set(key K, value T, ttl time.Duration) error
+	Get(key K) (T, bool)
+	Delete(key K)
+}
+
+type cache[K comparable, T any] struct {
 	mu    sync.RWMutex
 	cache map[K]CacheItem[T]
 }
@@ -15,8 +21,8 @@ type CacheItem[T any] struct {
 	lifeTime time.Time
 }
 
-func New[K comparable, T any]() *Cache[K, T] {
-	cache := &Cache[K, T]{
+func New[K comparable, T any]() Cache[K, T] {
+	cache := &cache[K, T]{
 		cache: make(map[K]CacheItem[T]),
 		mu:    sync.RWMutex{},
 	}
@@ -31,7 +37,7 @@ func New[K comparable, T any]() *Cache[K, T] {
 	return cache
 }
 
-func (c *Cache[K, T]) Set(key K, value T, ttl time.Duration) error {
+func (c *cache[K, T]) Set(key K, value T, ttl time.Duration) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cache[key] = CacheItem[T]{
@@ -41,20 +47,20 @@ func (c *Cache[K, T]) Set(key K, value T, ttl time.Duration) error {
 	return nil
 }
 
-func (c *Cache[K, T]) Get(key K) (T, bool) {
+func (c *cache[K, T]) Get(key K) (T, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	cache, exist := c.cache[key]
 	return cache.value, exist
 }
 
-func (c *Cache[K, T]) Delete(key K) {
+func (c *cache[K, T]) Delete(key K) {
 	c.mu.Lock()
 	delete(c.cache, key)
 	c.mu.Unlock()
 }
 
-func (c *Cache[K, T]) clear() {
+func (c *cache[K, T]) clear() {
 	for key, value := range c.cache {
 		if time.Now().After(value.lifeTime) {
 			delete(c.cache, key)
