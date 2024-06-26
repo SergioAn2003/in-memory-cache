@@ -13,17 +13,17 @@ type Cache[K comparable, T any] interface {
 
 type cache[K comparable, T any] struct {
 	mu    sync.RWMutex
-	cache map[K]CacheItem[T]
+	cache map[K]cacheItem[T]
 }
 
-type CacheItem[T any] struct {
+type cacheItem[T any] struct {
 	value    T
 	lifeTime time.Time
 }
 
 func New[K comparable, T any]() Cache[K, T] {
 	cache := &cache[K, T]{
-		cache: make(map[K]CacheItem[T]),
+		cache: make(map[K]cacheItem[T]),
 		mu:    sync.RWMutex{},
 	}
 
@@ -40,7 +40,7 @@ func New[K comparable, T any]() Cache[K, T] {
 func (c *cache[K, T]) Set(key K, value T, ttl time.Duration) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.cache[key] = CacheItem[T]{
+	c.cache[key] = cacheItem[T]{
 		value:    value,
 		lifeTime: time.Now().Add(ttl),
 	}
