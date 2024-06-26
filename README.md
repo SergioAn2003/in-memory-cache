@@ -2,4 +2,4 @@
 
 Installation
 
-```go get github.com/SergioAn2003/in-memory-cache```
+```go get -u github.com/SergioAn2003/in-memory-cache```
